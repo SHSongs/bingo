@@ -14,7 +14,7 @@
 
 #define ROW_MAX 5			//행 최대
 #define COL_MAX 5			//열 최대
-#define Required 4			// 빙고 를 이기는데 필요한 줄수 
+#define Required 2			// 빙고 를 이기는데 필요한 줄수 
 
 /*
 전체적인 흐름
@@ -33,20 +33,20 @@
 
 
 
-void control_game(int(*)[COL_MAX], int(*)[COL_MAX]); 	    	// 빙고 게임 컨트롤 함수  이 프로그램의 중심함수
+void control_game(int(*user)[COL_MAX], int(*computer)[COL_MAX]); 	    	// 빙고 게임 컨트롤 함수  이 프로그램의 중심함수
 
 
 int scanf_number_data(int(*data)[COL_MAX]);									// 사용자와 컴퓨터에게 데이터를 받습니다.
-int draw_game_map(int(*user)[COL_MAX], int(*computer)[COL_MAX]);		    // 게임판을 그립니다.
+int draw_game_map(int(*user[COL_MAX]), int(*computer[COL_MAX]));		    // 게임판을 그립니다.
 
 
 int scan_bingo(void);														// 빙고할 숫자를 받음
 int eraser_number(int(*data)[COL_MAX]);										// 받은 숫자 지우기 (0)으로
 int eraser_orther_number(int(*data)[COL_MAX], int);							//다른 판의 받은 숫자 삭제
-void Eraser_Funcion(int(*user)[COL_MAX], int(*computer)[COL_MAX]);
+void EraserFuncion(int(*user)[COL_MAX], int(*computer)[COL_MAX]);
 
 
-void bingo(int(*user)[COL_MAX], int(*computer)[COL_MAX]);
+void bingo(int(*user)[COL_MAX], int(*computer)[COL_MAX]);					//숫자를 지우는 컨트롤 함수
 int bingo_test(int(*data)[COL_MAX]);										//빙고줄인지 아닌지 검사
 
 
@@ -58,7 +58,7 @@ int numbers[25] = { 0 };													//사용자와 컴퓨터에게 받은  숫자 기록 하는 
 int numbers_cnt = 0;														//numbers를 위한 i 변수 입니다.(몇번출력될지)
 
 
-int A_I(int(*computer)[COL_MAX]);													//컴퓨터의 A_I입니다. 
+int A_I(int(*computer)[5]);													//컴퓨터의 A_I입니다. 
 																			/*문제점
 																				대각선 감지 못함
 																				가중치가 같은 경우
@@ -80,13 +80,13 @@ int main()
 	int computer[ROW_MAX][COL_MAX] = { 0 };										//computer의 5*5배열 생성
 
 
-	scanf_number_data(user);													//숫자를 받는다 랜덤
+	scanf_number_data(user);													//숫자를 섞는다 랜덤
 	scanf_number_data(computer);
 
 	control_game(user, computer);												//본격 게임 시작
 
-	
-	print_scan_number(numbers, numbers_cnt);
+
+	print_scan_number(numbers, numbers_cnt);									//게임이 끝난 후 받음 숫자를 뿜어냄
 
 	system("PAUSE");
 
@@ -95,21 +95,20 @@ int main()
 
 void control_game(int(*user)[COL_MAX], int(*computer)[COL_MAX])
 {
-	int user_cnt = 0;																//유저의 줄수를 알수 있는 변수
-	int computer_cnt = 0;															//컴퓨터의 줄수를 알 수 있는 변수
-	int num = 0;																	// 템프
+	int user_cnt = 0;																//유저의 줄수
+	int computer_cnt = 0;															//컴퓨터의 줄수
 
-	int num_temp;																	//자신이 입력한 숫자를 지우고 다른 판의 숫자도 지우기 위한 변수
 
 	int res;																		//게임을 종료시키기 위한 플래그 변수
 
-	draw_game_map(user, computer);													//게임 맵을 그리기 위한 함수
+	draw_game_map(user, computer);													//게임 맵 그림
+
 
 	while (1)
 	{
-		//그림 그리고
 
-		Eraser_Funcion(user, computer);												//숫자를 삭제시키기 위한 함수		인자가 두개인 이유는 컨트롤 게임 함수를 단순화 하기 위함
+
+		EraserFuncion(user, computer);												//받은 숫자를 삭제시키기 위한 함수		인자가 두개인 이유는 컨트롤 게임 함수를 단순화 하기 위함
 
 		user_cnt = bingo_test(user);												//유저의 몇줄 빙고인지 센다
 
@@ -120,22 +119,21 @@ void control_game(int(*user)[COL_MAX], int(*computer)[COL_MAX])
 		res = result(user_cnt, computer_cnt);										//컴퓨터나 유저가 이기는데 필요한 충족량을 넘기면 1반환
 
 		if (res == 1)																//1이면 게임이 끝이난다 main 함수로 돌아감
-		{									
+		{
 			system("PAUSE");
 			break;
 		}
 
-		
+
 		draw_game_map(user, computer);												//맵 업데이트
-		printf("user : %d줄  \n compuer : %d줄\n", user_cnt,computer_cnt);													//사용자의 줄 수 표시
-		bingo_cnt++;																//몇번진행됬는지 카운트 업
+		printf("user : %d줄  \n compuer : %d줄\n", user_cnt, computer_cnt);			//줄수를 콘솔짝에 찍음	
+																					//사용자의 줄 수 표시
 
+		bingo_cnt++;																//몇번째 턴인지  카운트 업
 
-		
 	}
 
 
-	//빙고 줄 승패 발표
 }
 
 
@@ -146,9 +144,11 @@ int scanf_number_data(int(*data)[COL_MAX])
 
 	int x1, x2, y1, y2;
 	int temp;
-	for (int i = 0; i < ROW_MAX; i++)
+
+
+	for (int i = 0; i < 5; i++)				//숫자를 초기화 (1~25)
 	{
-		for (int j = 0; j < COL_MAX; j++)
+		for (int j = 0; j < 5; j++)
 		{
 			cnt++;
 			data[i][j] = cnt;
@@ -157,13 +157,13 @@ int scanf_number_data(int(*data)[COL_MAX])
 	}
 
 
-	for (int i = 0; i < 300; i++)			//숫자 섞는 부분
+	for (int i = 0; i < 300; i++)			//숫자 섞는 부분		카드놀이하듯이 섞어준다.
 	{
-		x1 = (rand() % COL_MAX);
-		y1 = (rand() % ROW_MAX);
+		x1 = (rand() % 5);
+		y1 = (rand() % 5);
 
-		x2 = (rand() % COL_MAX);
-		y2 = (rand() % ROW_MAX);
+		x2 = (rand() % 5);
+		y2 = (rand() % 5);
 
 		temp = data[x1][y1];
 		data[x1][y1] = data[x2][y2];
@@ -173,9 +173,11 @@ int scanf_number_data(int(*data)[COL_MAX])
 	return 0;
 }
 
+
+
 int draw_game_map(int(*user)[COL_MAX], int(*computer)[COL_MAX])
 {
-	for (int i = 0; i < ROW_MAX; i++)
+	for (int i = 0; i < 5; i++)
 	{
 		printf("ㅣ%4dㅣ%4dㅣ%4dㅣ%4dㅣ%4dㅣ\n\n", user[i][0], user[i][1], user[i][2], user[i][3], user[i][4]);
 		printf("---------------------------------\n");
@@ -184,7 +186,7 @@ int draw_game_map(int(*user)[COL_MAX], int(*computer)[COL_MAX])
 
 	printf("\n\n");
 
-	for (int i = 0; i < ROW_MAX; i++)
+	for (int i = 0; i < 5; i++)
 	{
 		printf("ㅣ%4dㅣ%4dㅣ%4dㅣ%4dㅣ%4dㅣ\n\n", computer[i][0], computer[i][1], computer[i][2], computer[i][3], computer[i][4]);
 
@@ -195,28 +197,29 @@ int draw_game_map(int(*user)[COL_MAX], int(*computer)[COL_MAX])
 }
 
 
+
 int scan_bingo(void)
 {
 	int num;
 
 	printf("숫자를 입력하시오 : ");
 
-	
 
 	do
-	{																//do while 로 효율적으로 개선
+	{
 		scanf("%d", &num);
 
-	} while (num > 25 || num < 1);
-
+	} while (num > 25 || num < 1);		//1부터 25까지의 숫자를 받을 수 있게 한다. 
 
 
 	return num;
 }
 
 
-void Eraser_Funcion(int(*user)[COL_MAX], int(*computer)[COL_MAX])
+
+void EraserFuncion(int(*user)[COL_MAX], int(*computer)[COL_MAX])
 {
+
 	if (bingo_cnt % 2 == 0)											//빙고 카운트 를 2로나눈 나머지가 0일대
 	{
 		printf("U");
@@ -235,11 +238,12 @@ void Eraser_Funcion(int(*user)[COL_MAX], int(*computer)[COL_MAX])
 }
 
 
+
 int eraser_number(int(*data)[COL_MAX])
 {
 	int num = 0;
 
-	if (bingo_cnt % 2 == 0)
+	if (bingo_cnt % 2 == 0)										//빙고 턴수의 나머지를 계산해
 	{
 		num = scan_bingo();										//사용자에게 입력을 받는다
 	}
@@ -252,9 +256,9 @@ int eraser_number(int(*data)[COL_MAX])
 	numbers_cnt++;
 
 
-	for (int i = 0; i < ROW_MAX; i++)										//받은 숫자를 배열에서 찾아 0으로 만든다
+	for (int i = 0; i < 5; i++)										//받은 숫자를 배열에서 찾아 0으로 만든다
 	{
-		for (int j = 0; j < COL_MAX; j++)
+		for (int j = 0; j < 5; j++)
 		{
 			if (data[i][j] == num)
 			{
@@ -266,6 +270,7 @@ int eraser_number(int(*data)[COL_MAX])
 	return num;														//num값 반환하여 다른 판도 0으로 만든다.
 
 }
+
 
 int eraser_orther_number(int(*data)[COL_MAX], int num)
 {
@@ -287,9 +292,9 @@ int bingo_test(int(*data)[COL_MAX])
 	int cnt = 0;
 	int flog = 0;
 
-	for (int i = 0; i < ROW_MAX; i++)
+	for (int i = 0; i < 5; i++)
 	{
-		for (int j = 0; j < COL_MAX; j++)					//열검사
+		for (int j = 0; j < 5; j++)					//열검사
 		{
 			if (data[i][j] == 0)			//data 의 숫자가 0이면 cnt up
 			{
@@ -302,14 +307,14 @@ int bingo_test(int(*data)[COL_MAX])
 		}
 		cnt = 0;
 
-		for (int j = 0; j < ROW_MAX; j++)				//행검사
+		for (int j = 0; j < 5; j++)				//행검사
 		{
 			if (data[j][i] == 0)
 			{
 				cnt++;
 			}
 		}
-		if (cnt == ROW_MAX)
+		if (cnt == 5)
 		{
 			bingo++;
 		}
@@ -317,7 +322,7 @@ int bingo_test(int(*data)[COL_MAX])
 	}
 
 
-	for (int i = 0; i < ROW_MAX; i++)			// 윈쪽의 부터 오른쪽 아래 까지의 대각선 검사 
+	for (int i = 0; i < 5; i++)			// 윈쪽의 부터 오른쪽 아래 까지의 대각선 검사 
 	{
 		if (data[i][i] == 0)
 		{
@@ -331,7 +336,7 @@ int bingo_test(int(*data)[COL_MAX])
 	cnt = 0;
 
 	int j = 4;
-	for (int i = 0; i < ROW_MAX; i++)
+	for (int i = 0; i < 5; i++)
 	{
 		if (data[i][j] == 0)
 		{
@@ -423,35 +428,33 @@ uesr의 판은 보면 안됨
 
 
 
-int rand_max(int save_all_max[][2], int*, int*, int);
-int find_all_max(int, int save_all_max[][2], int weight[][5]);											//맥스 값과 같은 값을 찾아 배열에 저장한다
 
 
 
-int weight_add(int(*weight)[COL_MAX], int y, int x);						//가중치를 가중치 배열에 더한다
+int weight_add(int(*weight)[5], int y, int x);						//가중치를 가중치 배열에 더한다
 
 
-int xyfanc(int y, int x, int xy_cnt);
-int zero_number[1000][2] = { 0 };									//	0인 곳의 주소를 기억한다
+int xyfanc(int y, int x, int xy_cnt);								//	0인 곳의 주소를 기억한다
+int zero_number[1000][2] = { 0 };
 int xy_cnt = 0;
 
 
-int weight_max(int(*weight)[COL_MAX], int *Y_max, int *X_max);			//가중치의 높은곳을 찾아낸다.
+int weight_max(int(*weight)[5], int *Y_max, int *X_max);			//가중치의 높은곳을 찾아낸다.
 
 
 
-int A_I(int(*computer)[COL_MAX])
+int A_I(int(*data)[5])
 {
-	
-	xy_cnt = 0;
-	int save_all_max[25][2] = { 0 };
-	int weight[ROW_MAX][COL_MAX] = { 0 };
 
-	for (int i = 0; i < ROW_MAX; i++)										//computer 판의 0인곳을 찾아낸다.
+	xy_cnt = 0;
+
+	int weight[5][5] = { 0 };
+
+	for (int i = 0; i < 5; i++)										//computer 판의 0인곳을 찾아낸다.
 	{
-		for (int j = 0; j < COL_MAX; j++)
+		for (int j = 0; j < 5; j++)
 		{
-			if (computer[i][j] == 0)
+			if (data[i][j] == 0)
 			{
 				weight_add(weight, i, j);							//그곳의 xy 축에 가중치배열 +1
 				xyfanc(i, j, xy_cnt);								//자신를 기록한다.
@@ -470,45 +473,41 @@ int A_I(int(*computer)[COL_MAX])
 	int X_max;
 
 	int max = weight_max(weight, &Y_max, &X_max);				//가중치중 max 값 게산 그곳의 좌표 기록
-	int same_cnt = find_all_max(max, save_all_max, weight);
-
-	rand_max(save_all_max, &Y_max, &X_max, same_cnt);
-
 
 	int renumber = 0;
-	renumber = computer[Y_max][X_max];							//xy좌표에 있는 compuer 배열의 숫자를 찾아 renumber에 저장
+	renumber = data[Y_max][X_max];							//xy좌표에 있는 compuer 배열의 숫자를 찾아 renumber에 저장
 
 
-	printf("\n\n\n\n");
-	printf("0인 숫자의 좌표		: \n");
-	for (int i = 0; i < xy_cnt; i++)								//기록한 숫자 출력
-	{  
-		printf("                         ");
-		for (int j = 0; j < 2; j++)
-		{
-			printf("%3d", zero_number[i][j]);
-		}
-		printf("\n");
-	}
-	printf("\n\n\n");
+	//printf("\n\n\n\n");
+	//printf("0인 숫자의 좌표		: \n");
+	//for (int i = 0; i < xy_cnt; i++)								//기록한 숫자 출력
+	//{
+	//	printf("                         ");
+	//	for (int j = 0; j < 2; j++)
+	//	{
+	//		printf("%3d", zero_number[i][j]);
+	//	}
+	//	printf("\n");
+	//}
+	//printf("\n\n\n");
 
-	printf("가중치			: \n");
-	for (int i = 0; i < ROW_MAX; i++)									//가중치 출력
-	{ 
-		printf("                         ");
-		for (int j = 0; j < COL_MAX; j++)
-		{
-			printf("%3d", weight[i][j]);
-		}
-		printf("\n");
-	}
+	//printf("가중치			: \n");
+	//for (int i = 0; i < 5; i++)									//가중치 출력
+	//{
+	//	printf("                         ");
+	//	for (int j = 0; j < 5; j++)
+	//	{
+	//		printf("%3d", weight[i][j]);
+	//	}
+	//	printf("\n");
+	//}
 
-	printf("\n");
+	//printf("\n");
 
 
-	printf("가중치 최대값		: %d\n\n", max);
-	printf("최대값의 좌표		: %d  %d\n\n", Y_max, X_max);
-	printf("좌표에 대응하는 값	: %d\n\n", renumber);
+	//printf("가중치 최대값		: %d\n\n", max);
+	//printf("최대값의 좌표		: %d  %d\n\n", Y_max, X_max);
+	//printf("좌표에 대응하는 값	: %d\n\n", renumber);
 
 
 	return renumber;											//입력할 숫자 반환
@@ -516,11 +515,11 @@ int A_I(int(*computer)[COL_MAX])
 }
 
 
-int weight_add(int(*weight)[COL_MAX], int y, int x)					//가중치 계산 함수
+int weight_add(int(*weight)[5], int y, int x)					//가중치 계산 함수
 {
-	for (int i = 0; i < ROW_MAX; i++)
+	for (int i = 0; i < 5; i++)
 	{
-		for (int j = 0; j < COL_MAX; j++)
+		for (int j = 0; j < 5; j++)
 		{
 			if (x == i)
 			{
@@ -544,13 +543,13 @@ int xyfanc(int y, int x, int xy_cnt)
 }
 
 
-int weight_max(int(*weight)[COL_MAX], int *Y_max, int *X_max)
+int weight_max(int(*weight)[5], int *Y_max, int *X_max)
 {
 	int max = -999;
 
-	for (int i = 0; i < ROW_MAX; i++)
+	for (int i = 0; i < 5; i++)
 	{
-		for (int j = 0; j < COL_MAX; j++)
+		for (int j = 0; j < 5; j++)
 		{
 			if (weight[i][j] >= max)
 			{
@@ -562,44 +561,4 @@ int weight_max(int(*weight)[COL_MAX], int *Y_max, int *X_max)
 	}
 
 	return max;
-}
-
-
-int find_all_max(int max, int save_all_max[][2], int weight[][5])
-{
-	int cnt = 0;
-
-	for (int i = 0; i < ROW_MAX; i++)
-	{
-		for (int j = 0; j < COL_MAX; j++)
-		{
-			if (weight[i][j] == max)
-			{
-				save_all_max[cnt][0] = i;
-				save_all_max[cnt][1] = j;
-				cnt++;
-			}
-		}
-	}
-	return cnt;
-}
-
-int rand_max(int save_all_max[][2], int *Y_max, int *X_max, int cnt)
-{
-	int rand_num;
-
-	for (int i = 0; i < 10; i++)
-	{
-		rand_num = rand() % cnt;
-	}
-
-
-	*Y_max = save_all_max[rand_num][0];
-	*X_max = save_all_max[rand_num][1];
-
-
-
-	printf("랜덤값 : %d\n\n", rand_num);
-
-
 }
